@@ -401,17 +401,25 @@ function notionToCase(page) {
 async function load() {
   showLoading('노션에서 데이터 불러오는 중...');
   try {
-    const res = await fetch(`${PROXY}/v1/databases/${NOTION_DB}/query`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Notion-Version': '2022-06-28',
-      },
-      body: JSON.stringify({ page_size: 100 })
-    });
-    if (!res.ok) throw new Error(`API 오류: ${res.status}`);
-    const data = await res.json();
-    cases = data.results.map(notionToCase).filter(c=>c.title);
+    let allResults = [];
+    let cursor = undefined;
+    do {
+      const body = { page_size: 100 };
+      if (cursor) body.start_cursor = cursor;
+      const res = await fetch(`${PROXY}/v1/databases/${NOTION_DB}/query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Notion-Version': '2022-06-28',
+        },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(`API 오류: ${res.status}`);
+      const data = await res.json();
+      allResults = allResults.concat(data.results);
+      cursor = data.has_more ? data.next_cursor : undefined;
+    } while (cursor);
+    cases = allResults.map(notionToCase).filter(c=>c.title);
     updateStats();
     renderCards();
   } catch(e) {
