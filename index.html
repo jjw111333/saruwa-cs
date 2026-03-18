@@ -392,7 +392,11 @@ function notionToCase(page) {
     inquiry: getText(p['Original Inquiry'] || p['원문'] || p['inquiry']),
     reply: getText(p['Reply'] || p['답변'] || p['reply']),
     priority: getSelect(p['Priority'] || p['우선순위']) || 'Medium',
-    status: getSelect(p['Status'] || p['상태']) || 'Done',
+    status: (()=>{
+      const statusMap = { 'DONE':'Done','Done':'Done','done':'Done','REVIEW':'보류','Review':'보류','In progress':'진행중','IN PROGRESS':'진행중','new':'대기','New':'대기','NEW':'대기' };
+      const raw = getSelect(p['Status'] || p['상태']) || 'new';
+      return statusMap[raw] || raw;
+    })(),
     assignee: getText(p['Created by'] || p['담당자']) || getSelect(p['Created by']),
     date: getDate(p['Created time'] || p['날짜']),
   };
@@ -525,7 +529,7 @@ function renderCards() {
   }
 
   list.innerHTML = filtered.map(c => `
-    <div class="case-card" id="card-${c.id}" onclick="toggleCard(${c.id})">
+    <div class="case-card" id="card-${c.id.toString().replace(/-/g,'_')}" onclick="toggleCard('${c.id}')">
       <div class="card-head">
         <div class="card-left">
           <div class="card-tags">${c.tags.map(t=>`<span class="card-tag ${t}">${t}</span>`).join('')}</div>
@@ -555,7 +559,10 @@ function renderCards() {
 }
 
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
-function toggleCard(id) { document.getElementById('card-'+id).classList.toggle('expanded'); }
+function toggleCard(id) {
+  const safeId = id.toString().replace(/-/g,'_');
+  document.getElementById('card-'+safeId).classList.toggle('expanded');
+}
 
 function copyReply(e,id) {
   e.stopPropagation();
