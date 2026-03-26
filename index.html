@@ -40,15 +40,13 @@
   .tag { font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; color: var(--text2); transition: all 0.15s; font-weight: 500; }
   .tag:hover { border-color: var(--border2); }
 
-  .tag.파손분실 { --tc: #C0392B; --tl: #FDEDEC; }
-  .tag.오배송 { --tc: #1A5276; --tl: #EBF5FB; }
-  .tag.누락 { --tc: #784212; --tl: #FDF2E9; }
-  .tag.취소반송 { --tc: #6C3483; --tl: #F5EEF8; }
+  .tag.상품문제 { --tc: #C0392B; --tl: #FDEDEC; }
+  .tag.배송문제 { --tc: #1A5276; --tl: #EBF5FB; }
+  .tag.내부업무 { --tc: #784212; --tl: #FDF2E9; }
+  .tag.일반문의 { --tc: #1E8449; --tl: #EAFAF1; }
+  .tag.주문결제 { --tc: #6C3483; --tl: #F5EEF8; }
+  .tag.프리미엄 { --tc: #884EA0; --tl: #F5EEF8; }
   .tag.통관 { --tc: #7D6608; --tl: #FEFDE7; }
-  .tag.확인필요 { --tc: #1E8449; --tl: #EAFAF1; }
-  .tag.배송사확인 { --tc: #2471A3; --tl: #EBF5FB; }
-  .tag.Task { --tc: #4D5656; --tl: #F2F3F4; }
-  .tag.스케줄 { --tc: #884EA0; --tl: #F5EEF8; }
   .tag.기타 { --tc: #5D6D7E; --tl: #EAF2FF; }
   .tag.active { background: var(--tl, var(--accent-light)); color: var(--tc, var(--accent)); border-color: var(--tc, var(--accent)); }
 
@@ -83,15 +81,13 @@
   .card-left { flex: 1; min-width: 0; }
   .card-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 5px; }
   .card-tag { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
-  .card-tag.파손분실 { background: #FDEDEC; color: #C0392B; }
-  .card-tag.오배송 { background: #EBF5FB; color: #1A5276; }
-  .card-tag.누락 { background: #FDF2E9; color: #784212; }
-  .card-tag.취소반송 { background: #F5EEF8; color: #6C3483; }
+  .card-tag.상품문제 { background: #FDEDEC; color: #C0392B; }
+  .card-tag.배송문제 { background: #EBF5FB; color: #1A5276; }
+  .card-tag.내부업무 { background: #FDF2E9; color: #784212; }
+  .card-tag.일반문의 { background: #EAFAF1; color: #1E8449; }
+  .card-tag.주문결제 { background: #F5EEF8; color: #6C3483; }
+  .card-tag.프리미엄 { background: #F5EEF8; color: #884EA0; }
   .card-tag.통관 { background: #FEFDE7; color: #7D6608; }
-  .card-tag.확인필요 { background: #EAFAF1; color: #1E8449; }
-  .card-tag.배송사확인 { background: #EBF5FB; color: #2471A3; }
-  .card-tag.Task { background: #F2F3F4; color: #4D5656; }
-  .card-tag.스케줄 { background: #F5EEF8; color: #884EA0; }
   .card-tag.기타 { background: #EAF2FF; color: #5D6D7E; }
 
   .card-title { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -145,15 +141,13 @@
 
   .tag-select-grid { display: flex; gap: 6px; flex-wrap: wrap; }
   .tag-toggle { font-size: 11px; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; color: var(--text2); font-weight: 500; transition: all 0.15s; font-family: var(--sans); }
-  .tag-toggle.selected.파손분실 { background: #FDEDEC; color: #C0392B; border-color: #C0392B; }
-  .tag-toggle.selected.오배송 { background: #EBF5FB; color: #1A5276; border-color: #1A5276; }
-  .tag-toggle.selected.누락 { background: #FDF2E9; color: #784212; border-color: #784212; }
-  .tag-toggle.selected.취소반송 { background: #F5EEF8; color: #6C3483; border-color: #6C3483; }
+  .tag-toggle.selected.상품문제 { background: #FDEDEC; color: #C0392B; border-color: #C0392B; }
+  .tag-toggle.selected.배송문제 { background: #EBF5FB; color: #1A5276; border-color: #1A5276; }
+  .tag-toggle.selected.내부업무 { background: #FDF2E9; color: #784212; border-color: #784212; }
+  .tag-toggle.selected.일반문의 { background: #EAFAF1; color: #1E8449; border-color: #1E8449; }
+  .tag-toggle.selected.주문결제 { background: #F5EEF8; color: #6C3483; border-color: #6C3483; }
+  .tag-toggle.selected.프리미엄 { background: #F5EEF8; color: #884EA0; border-color: #884EA0; }
   .tag-toggle.selected.통관 { background: #FEFDE7; color: #7D6608; border-color: #7D6608; }
-  .tag-toggle.selected.확인필요 { background: #EAFAF1; color: #1E8449; border-color: #1E8449; }
-  .tag-toggle.selected.배송사확인 { background: #EBF5FB; color: #2471A3; border-color: #2471A3; }
-  .tag-toggle.selected.Task { background: #F2F3F4; color: #4D5656; border-color: #4D5656; }
-  .tag-toggle.selected.스케줄 { background: #F5EEF8; color: #884EA0; border-color: #884EA0; }
   .tag-toggle.selected.기타 { background: #EAF2FF; color: #5D6D7E; border-color: #5D6D7E; }
 
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
@@ -210,14 +204,14 @@
       <span class="filter-label">카테고리</span>
       <div class="tag-grid">
         <span class="tag active" data-cat="전체" onclick="filterCat(this)">전체</span>
-        <span class="tag 파손분실" data-cat="파손분실" onclick="filterCat(this)">파손/분실</span>
-        <span class="tag 오배송" data-cat="오배송" onclick="filterCat(this)">오배송</span>
-        <span class="tag 누락" data-cat="누락" onclick="filterCat(this)">누락</span>
-        <span class="tag 취소반송" data-cat="취소반송" onclick="filterCat(this)">취소/반송</span>
+        <span class="tag 상품문제" data-cat="상품 문제" onclick="filterCat(this)">상품 문제</span>
+        <span class="tag 배송문제" data-cat="배송 문제" onclick="filterCat(this)">배송 문제</span>
+        <span class="tag 내부업무" data-cat="내부 업무" onclick="filterCat(this)">내부 업무</span>
+        <span class="tag 일반문의" data-cat="일반 문의" onclick="filterCat(this)">일반 문의</span>
+        <span class="tag 주문결제" data-cat="주문/결제" onclick="filterCat(this)">주문/결제</span>
+        <span class="tag 프리미엄" data-cat="프리미엄" onclick="filterCat(this)">프리미엄</span>
         <span class="tag 통관" data-cat="통관" onclick="filterCat(this)">통관</span>
-        <span class="tag 확인필요" data-cat="확인필요" onclick="filterCat(this)">확인필요</span>
-        <span class="tag 배송사확인" data-cat="배송사확인" onclick="filterCat(this)">배송사확인</span>
-        <span class="tag Task" data-cat="Task" onclick="filterCat(this)">Task</span>
+        <span class="tag 기타" data-cat="기타" onclick="filterCat(this)">기타</span>
         <span class="tag 스케줄" data-cat="스케줄" onclick="filterCat(this)">스케줄</span>
         <span class="tag 기타" data-cat="기타" onclick="filterCat(this)">기타</span>
       </div>
@@ -297,15 +291,13 @@
     <div class="form-row">
       <label class="form-label">카테고리 (복수 선택 가능)</label>
       <div class="tag-select-grid">
-        <button class="tag-toggle 파손분실" onclick="toggleTag(this,'파손분실')">파손/분실</button>
-        <button class="tag-toggle 오배송" onclick="toggleTag(this,'오배송')">오배송</button>
-        <button class="tag-toggle 누락" onclick="toggleTag(this,'누락')">누락</button>
-        <button class="tag-toggle 취소반송" onclick="toggleTag(this,'취소반송')">취소/반송</button>
+        <button class="tag-toggle 상품문제" onclick="toggleTag(this,'상품 문제')">상품 문제</button>
+        <button class="tag-toggle 배송문제" onclick="toggleTag(this,'배송 문제')">배송 문제</button>
+        <button class="tag-toggle 내부업무" onclick="toggleTag(this,'내부 업무')">내부 업무</button>
+        <button class="tag-toggle 일반문의" onclick="toggleTag(this,'일반 문의')">일반 문의</button>
+        <button class="tag-toggle 주문결제" onclick="toggleTag(this,'주문/결제')">주문/결제</button>
+        <button class="tag-toggle 프리미엄" onclick="toggleTag(this,'프리미엄')">프리미엄</button>
         <button class="tag-toggle 통관" onclick="toggleTag(this,'통관')">통관</button>
-        <button class="tag-toggle 확인필요" onclick="toggleTag(this,'확인필요')">확인필요</button>
-        <button class="tag-toggle 배송사확인" onclick="toggleTag(this,'배송사확인')">배송사확인</button>
-        <button class="tag-toggle Task" onclick="toggleTag(this,'Task')">Task</button>
-        <button class="tag-toggle 스케줄" onclick="toggleTag(this,'스케줄')">스케줄</button>
         <button class="tag-toggle 기타" onclick="toggleTag(this,'기타')">기타</button>
       </div>
     </div>
@@ -683,9 +675,9 @@ function switchView(view, btn) {
   if (view==='manual') renderManual();
 }
 
-const CATS = ['파손분실','오배송','누락','취소반송','통관','확인필요','배송사확인','Task','스케줄','기타'];
-const CAT_COLORS = { '파손분실':'#C0392B','오배송':'#1A5276','누락':'#784212','취소반송':'#6C3483','통관':'#7D6608','확인필요':'#1E8449','배송사확인':'#2471A3','Task':'#4D5656','스케줄':'#884EA0','기타':'#5D6D7E' };
-const CAT_BG = { '파손분실':'#FDEDEC','오배송':'#EBF5FB','누락':'#FDF2E9','취소반송':'#F5EEF8','통관':'#FEFDE7','확인필요':'#EAFAF1','배송사확인':'#EBF5FB','Task':'#F2F3F4','스케줄':'#F5EEF8','기타':'#EAF2FF' };
+const CATS = ['상품 문제','배송 문제','내부 업무','일반 문의','주문/결제','프리미엄','통관','기타'];
+const CAT_COLORS = { '상품 문제':'#C0392B','배송 문제':'#1A5276','내부 업무':'#784212','일반 문의':'#1E8449','주문/결제':'#6C3483','프리미엄':'#884EA0','통관':'#7D6608','기타':'#5D6D7E' };
+const CAT_BG = { '상품 문제':'#FDEDEC','배송 문제':'#EBF5FB','내부 업무':'#FDF2E9','일반 문의':'#EAFAF1','주문/결제':'#F5EEF8','프리미엄':'#F5EEF8','통관':'#FEFDE7','기타':'#EAF2FF' };
 
 function renderManual() {
   const grid = document.getElementById('manualGrid');
