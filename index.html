@@ -101,9 +101,9 @@
   .priority-badge.Medium { background: #FEF9E7; color: #7D6608; }
   .priority-badge.Low { background: #EAFAF1; color: #1E8449; }
   .status-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
-  .status-badge.Done { background: #EAFAF1; color: #1E8449; }
+  .status-badge.완료 { background: #EAFAF1; color: #1E8449; }
   .status-badge.진행중 { background: #EBF5FB; color: #1A5276; }
-  .status-badge.대기 { background: #FEF9E7; color: #7D6608; }
+  .status-badge.신규 { background: #FEF9E7; color: #7D6608; }
   .status-badge.보류 { background: #F5EEF8; color: #6C3483; }
   .expand-icon { font-size: 11px; color: var(--text3); transition: transform 0.2s; }
   .case-card.expanded .expand-icon { transform: rotate(180deg); }
@@ -212,8 +212,6 @@
         <span class="tag 프리미엄" data-cat="프리미엄" onclick="filterCat(this)">프리미엄</span>
         <span class="tag 통관" data-cat="통관" onclick="filterCat(this)">통관</span>
         <span class="tag 기타" data-cat="기타" onclick="filterCat(this)">기타</span>
-        <span class="tag 스케줄" data-cat="스케줄" onclick="filterCat(this)">스케줄</span>
-        <span class="tag 기타" data-cat="기타" onclick="filterCat(this)">기타</span>
       </div>
 
       <span class="filter-label">우선순위</span>
@@ -227,10 +225,10 @@
       <span class="filter-label">처리 상태</span>
       <div class="status-grid">
         <button class="s-btn active" data-s="전체" onclick="filterStatus(this)">전체</button>
+        <button class="s-btn" data-s="신규" onclick="filterStatus(this)">신규</button>
         <button class="s-btn" data-s="진행중" onclick="filterStatus(this)">진행중</button>
-        <button class="s-btn" data-s="대기" onclick="filterStatus(this)">대기</button>
         <button class="s-btn" data-s="보류" onclick="filterStatus(this)">보류</button>
-        <button class="s-btn" data-s="Done" onclick="filterStatus(this)">완료</button>
+        <button class="s-btn" data-s="완료" onclick="filterStatus(this)">완료</button>
       </div>
     </div>
   </aside>
@@ -238,8 +236,12 @@
   <!-- Main -->
   <main class="main">
     <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchView('cases',this)">📋 사례 기록</button>
-      <button class="nav-tab" onclick="switchView('manual',this)">📖 유형별 매뉴얼</button>
+      <button class="nav-tab" onclick="switchView('cases',this)">📋 사례 기록</button>
+      <button class="nav-tab active" onclick="switchView('status','신규',this)">🆕 신규</button>
+      <button class="nav-tab" onclick="switchView('status','진행중',this)">🔄 진행중</button>
+      <button class="nav-tab" onclick="switchView('status','보류',this)">⏸ 보류</button>
+      <button class="nav-tab" onclick="switchView('status','완료',this)">✅ 완료</button>
+      <button class="nav-tab" onclick="switchView('manual',this)">📖 매뉴얼</button>
     </div>
 
     <div id="view-cases">
@@ -314,10 +316,10 @@
       <div class="form-row" style="margin-bottom:0">
         <label class="form-label">처리 상태</label>
         <select class="form-select" id="fStatus">
+          <option value="신규">신규</option>
           <option value="진행중">진행중</option>
-          <option value="대기">대기</option>
-          <option value="보류">보류</option>
-          <option value="Done">Done (완료)</option>
+          <option value="보류">보류(검토)</option>
+          <option value="완료">완료</option>
         </select>
       </div>
       <div class="form-row" style="margin-bottom:0">
@@ -354,7 +356,7 @@ const NOTION_DB = '1a7f4b08518a80c5aaa6d512074b2163';
 const PROXY = 'https://saruwa-notion.saruwa-buy.workers.dev'; // CORS 우회용 프록시
 
 let cases = [];
-let activeCat = '전체', activePriority = '전체', activeStatus = '전체';
+let activeCat = '전체', activePriority = '전체', activeStatus = '신규';
 let editingId = null, selectedTags = [];
 let isLoading = false;
 
@@ -385,7 +387,7 @@ function notionToCase(page) {
     reply: getText(p['Reply'] || p['답변'] || p['reply']),
     priority: getSelect(p['Priority'] || p['우선순위']) || 'Medium',
     status: (()=>{
-      const statusMap = { 'DONE':'Done','Done':'Done','done':'Done','REVIEW':'보류','Review':'보류','In progress':'진행중','IN PROGRESS':'진행중','new':'대기','New':'대기','NEW':'대기' };
+      const statusMap = { 'DONE':'완료','Done':'완료','done':'완료','REVIEW':'보류','Review':'보류','In progress':'진행중','IN PROGRESS':'진행중','new':'신규','New':'신규','NEW':'신규' };
       const raw = getSelect(p['Status'] || p['상태']) || 'new';
       return statusMap[raw] || raw;
     })(),
@@ -667,12 +669,27 @@ async function deleteCase(e,id) {
   cases = cases.filter(c=>c.id!==id); save();
 }
 
-function switchView(view, btn) {
+function switchView(view, statusOrBtn, btnEl) {
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('view-cases').style.display = view==='cases' ? '' : 'none';
-  document.getElementById('view-manual').style.display = view==='manual' ? '' : 'none';
-  if (view==='manual') renderManual();
+  
+  if (view === 'status') {
+    btnEl.classList.add('active');
+    activeStatus = statusOrBtn;
+    document.getElementById('view-cases').style.display = '';
+    document.getElementById('view-manual').style.display = 'none';
+    renderCards();
+  } else if (view === 'cases') {
+    statusOrBtn.classList.add('active');
+    activeStatus = '전체';
+    document.getElementById('view-cases').style.display = '';
+    document.getElementById('view-manual').style.display = 'none';
+    renderCards();
+  } else if (view === 'manual') {
+    statusOrBtn.classList.add('active');
+    document.getElementById('view-cases').style.display = 'none';
+    document.getElementById('view-manual').style.display = '';
+    renderManual();
+  }
 }
 
 const CATS = ['상품 문제','배송 문제','내부 업무','일반 문의','주문/결제','프리미엄','통관','기타'];
