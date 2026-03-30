@@ -469,8 +469,8 @@ async function saveToNotion(data, notionId=null) {
     },
     body: JSON.stringify(body)
   });
-  if (!res.ok) throw new Error(`저장 실패: ${res.status}`);
-  return await res.json();
+  if (!res2.ok) throw new Error(`저장 실패: ${res2.status}`);
+  return await res2.json();
 }
 
 function save(render=true) {
@@ -697,7 +697,7 @@ async function changeStatus(e, id, newStatus) {
   save();
 }
 
-
+async function deleteCase(e,id) {
   e.stopPropagation();
   if(!confirm('이 사례를 삭제할까요?')) return;
   try {
