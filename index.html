@@ -163,7 +163,18 @@
   .btn-save { padding: 9px 22px; border: none; border-radius: var(--radius-sm); background: var(--accent); color: #fff; font-size: 13px; font-weight: 500; cursor: pointer; font-family: var(--sans); transition: opacity 0.15s; }
   .btn-save:hover { opacity: 0.85; }
 
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .inline-hint { font-size: 9px; color: var(--text-muted); font-weight: 400; letter-spacing: 0; text-transform: none; margin-left: 4px; }
+  .inline-edit-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .inline-textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text); background: var(--bg); font-family: var(--sans); outline: none; resize: vertical; min-height: 60px; line-height: 1.6; transition: border 0.15s; }
+  .inline-textarea:focus { border-color: var(--accent); background: #fff; }
+  .reply-textarea { min-height: 80px; background: var(--accent-light); border-color: var(--purple-soft); }
+  .reply-textarea:focus { border-color: var(--accent); }
+  .inline-actions { display: flex; gap: 6px; }
+  .inline-save-btn { font-size: 11px; font-weight: 600; padding: 4px 14px; border-radius: var(--radius-sm); border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; font-family: var(--sans); transition: opacity 0.15s; }
+  .inline-save-btn:hover { opacity: 0.85; }
+  .inline-save-btn.saved { background: #22C55E; border-color: #22C55E; }
+  .copy-btn-inline { font-size: 11px; font-weight: 600; padding: 4px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer; font-family: var(--sans); transition: all 0.15s; }
+  .copy-btn-inline:hover { border-color: var(--accent); color: var(--accent); }
 
   /* Nav tabs */
   .nav-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 24px; position: sticky; top: 0; z-index: 10; }
@@ -549,8 +560,27 @@ function renderCards() {
       </div>
       <div class="card-body">
         ${c.inquiry ? `<div class="card-section"><div class="section-label">고객 원문 문의</div><div class="section-text">${esc(c.inquiry)}</div></div>` : ''}
-        ${c.notes ? `<div class="card-section"><div class="section-label">처리 내용 / 메모</div><div class="section-text">${esc(c.notes)}</div></div>` : ''}
-        ${c.reply ? `<div class="card-section"><div class="section-label">답변 정형문</div><div class="reply-box">${esc(c.reply)}<button class="copy-btn" onclick="copyReply(event,${c.id})">복사</button></div></div>` : ''}
+        
+        <div class="card-section">
+          <div class="section-label">처리 내용 / 메모 <span class="inline-hint">클릭해서 편집</span></div>
+          <div class="inline-edit-wrap">
+            <textarea class="inline-textarea" id="notes-${c.id}" onclick="event.stopPropagation()" placeholder="처리 내용을 입력하세요...">${c.notes||''}</textarea>
+            <div class="inline-actions">
+              <button class="inline-save-btn" onclick="saveInline(event,'${c.id}','notes')">저장</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <div class="section-label">답변 정형문 <span class="inline-hint">클릭해서 편집 · 저장 후 복사 가능</span></div>
+          <div class="inline-edit-wrap">
+            <textarea class="inline-textarea reply-textarea" id="reply-${c.id}" onclick="event.stopPropagation()" placeholder="정형문을 입력하세요. 저장하면 복사 버튼이 생겨요.">${c.reply||''}</textarea>
+            <div class="inline-actions">
+              <button class="inline-save-btn" onclick="saveInline(event,'${c.id}','reply')">저장</button>
+              ${c.reply ? `<button class="copy-btn-inline" onclick="copyReply(event,'${c.id}')">📋 복사</button>` : ''}
+            </div>
+          </div>
+        </div>
         <div class="card-actions">
           <div class="status-btns">
             ${c.status !== '신규' ? `<button class="status-action-btn s-신규" onclick="changeStatus(event,'${c.id}','신규')">신규</button>` : ''}
@@ -667,6 +697,37 @@ function editCase(e,id) {
     if(matched) t.classList.add('selected'); else t.classList.remove('selected');
   });
   openModal(false);
+}
+
+async function saveInline(e, id, field) {
+  e.stopPropagation();
+  const btn = e.target;
+  const textarea = document.getElementById(`${field}-${id}`);
+  const value = textarea.value.trim();
+
+  btn.textContent = '저장중...'; btn.disabled = true;
+
+  // 노션 속성명 매핑
+  const notionFieldMap = { 'notes': 'Notes', 'reply': 'Reply' };
+  const notionField = notionFieldMap[field];
+
+  try {
+    await fetch(`${PROXY}/v1/pages/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Notion-Version': '2022-06-28' },
+      body: JSON.stringify({
+        properties: { [notionField]: { rich_text: [{ text: { content: value } }] } }
+      })
+    });
+  } catch(err) { console.warn('노션 저장 실패', err); }
+
+  // 로컬 업데이트
+  const idx = cases.findIndex(c=>c.id===id);
+  if (idx > -1) cases[idx][field] = value;
+  save();
+
+  btn.textContent = '저장됨 ✓'; btn.classList.add('saved');
+  setTimeout(()=>{ btn.textContent = '저장'; btn.classList.remove('saved'); btn.disabled = false; }, 2000);
 }
 
 async function changeStatus(e, id, newStatus) {
