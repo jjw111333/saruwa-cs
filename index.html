@@ -507,8 +507,14 @@ function renderCards() {
       <div class="card-body">
         <div class="card-attrs">
           <div class="attr-item">
+            <span class="attr-label">대분류</span>
+            <select class="attr-select" onclick="event.stopPropagation()" onchange="updateCatAttr(event,'${c.id}',this.value)">
+              ${Object.keys(CAT_STRUCTURE).map(cat=>`<option value="${cat}" ${c.cat===cat?'selected':''}>${cat}</option>`).join('')}
+            </select>
+          </div>
+          <div class="attr-item">
             <span class="attr-label">중분류</span>
-            <select class="attr-select" onclick="event.stopPropagation()" onchange="updateAttr(event,'${c.id}','subCat',this.value)">
+            <select class="attr-select" id="subcat-sel-${c.id.replace(/-/g,'_')}" onclick="event.stopPropagation()" onchange="updateAttr(event,'${c.id}','subCat',this.value)">
               <option value="">선택</option>
               ${subCatOptions(c)}
             </select>
@@ -591,14 +597,33 @@ function copyReply(e,id) {
   });
 }
 
+async function updateCatAttr(e, id, newCat) {
+  e.stopPropagation();
+  const idx = cases.findIndex(c=>c.id===id);
+  if (idx>-1) { cases[idx].cat = newCat; cases[idx].subCat = ''; }
+  // 중분류 셀렉트 업데이트
+  const subSel = document.getElementById(`subcat-sel-${id.replace(/-/g,'_')}`);
+  if (subSel) {
+    const subs = CAT_STRUCTURE[newCat]||[];
+    subSel.innerHTML = `<option value="">선택</option>` + subs.map(s=>`<option value="${s}">${s}</option>`).join('');
+  }
+  // 노션에 대분류 반영
+  try {
+    await fetch(`${PROXY}/v1/pages/${id}`, {
+      method:'PATCH',
+      headers:{'Content-Type':'application/json','Notion-Version':'2022-06-28'},
+      body: JSON.stringify({properties:{'Category':{select:{name:newCat}}}})
+    });
+  } catch(err) { console.warn('노션 대분류 변경 실패', err); }
+  updateStats();
+}
+
 // 속성 인라인 변경
 async function updateAttr(e, id, field, value) {
   e.stopPropagation();
   const idx = cases.findIndex(c=>c.id===id);
   if (idx>-1) cases[idx][field] = value;
   updateStats();
-  // 노션에는 Notes/Reply만 rich_text로 저장 가능, 나머지는 로컬만
-  // (노션 커스텀 필드 추가 시 연동 가능)
 }
 
 async function saveInline(e, id, field) {
