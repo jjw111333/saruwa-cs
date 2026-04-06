@@ -187,6 +187,36 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .manual-case-sub{font-size:11px;color:var(--text2);margin-top:2px;}
 .empty-state{text-align:center;padding:60px 20px;color:var(--text3);}
 .empty-icon{font-size:32px;margin-bottom:10px;}
+
+/* Template View */
+.template-view{padding:20px 24px;}
+.template-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:16px;}
+.template-title{font-size:16px;font-weight:700;flex-shrink:0;}
+.template-search-wrap input{padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:var(--sans);outline:none;width:260px;transition:border .15s;}
+.template-search-wrap input:focus{border-color:var(--accent);}
+.template-cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.template-cat-btn{font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;font-family:var(--sans);transition:all .15s;}
+.template-cat-btn.active{background:var(--accent-light);color:var(--accent);border-color:var(--accent);}
+.template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;}
+.template-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .15s,box-shadow .15s;}
+.template-card:hover{border-color:var(--border2);box-shadow:var(--shadow);}
+.template-card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.template-card-info{flex:1;min-width:0;}
+.template-card-name{font-size:13px;font-weight:700;color:var(--text);}
+.template-card-meta{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;}
+.template-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:var(--accent-light);color:var(--accent);}
+.template-place-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:#F3F4F6;color:#6B665E;}
+.template-card-body{padding:12px 16px;}
+.template-content{font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-line;max-height:100px;overflow:hidden;position:relative;}
+.template-content.expanded{max-height:none;}
+.template-content::after{content:'';position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(transparent,white);pointer-events:none;}
+.template-content.expanded::after{display:none;}
+.template-notice{font-size:11px;color:#C0392B;margin-top:6px;padding:6px 8px;background:#FDEDEC;border-radius:var(--radius-sm);}
+.template-actions{display:flex;gap:6px;margin-top:10px;}
+.template-copy-btn{font-size:11px;font-weight:600;padding:5px 14px;border-radius:var(--radius-sm);border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-family:var(--sans);transition:opacity .15s;}
+.template-copy-btn:hover{opacity:.85;}
+.template-expand-btn{font-size:11px;padding:5px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;font-family:var(--sans);}
+.template-loading{text-align:center;padding:40px;color:var(--text3);}
 </style>
 </head>
 <body>
@@ -233,6 +263,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       <button class="nav-tab" onclick="switchView('status','완료',this)">✅ 완료</button>
       <button class="nav-tab" onclick="switchView('manual',this)">📖 매뉴얼</button>
       <button class="nav-tab" onclick="switchView('catmgr',this)">⚙️ 카테고리</button>
+      <button class="nav-tab" onclick="switchView('templates',this)">📝 정형문</button>
     </div>
 
     <div id="view-cases">
@@ -267,6 +298,19 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       <div class="cat-manager">
         <div class="cat-manager-title">⚙️ 카테고리 관리</div>
         <div class="cat-grid" id="catMgrGrid"></div>
+      </div>
+    </div>
+
+    <div id="view-templates" style="display:none">
+      <div class="template-view">
+        <div class="template-header">
+          <div class="template-title">📝 정형문 라이브러리</div>
+          <div class="template-search-wrap">
+            <input type="text" id="templateSearch" placeholder="정형문 검색..." oninput="renderTemplates()">
+          </div>
+        </div>
+        <div class="template-cat-tabs" id="templateCatTabs"></div>
+        <div id="templateList"></div>
       </div>
     </div>
   </main>
@@ -678,7 +722,113 @@ async function deleteCase(e, id) {
   updateStats(); renderCards();
 }
 
-// ===== AI 기능 =====
+// ===== 정형문 =====
+const TEMPLATE_DB = '246f4b08518a80208e8ec11b7e88fa97';
+let templates = [];
+let activeTplCat = '전체';
+
+async function loadTemplates() {
+  document.getElementById('templateList').innerHTML = '<div class="template-loading">📝 정형문 불러오는 중...</div>';
+  try {
+    let allResults = [], cursor;
+    do {
+      const body = { page_size: 100 };
+      if (cursor) body.start_cursor = cursor;
+      const res = await fetch(`${PROXY}/v1/databases/${TEMPLATE_DB}/query`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Notion-Version': '2022-06-28' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      allResults = allResults.concat(data.results);
+      cursor = data.has_more ? data.next_cursor : undefined;
+    } while (cursor);
+
+    templates = allResults.map(page => {
+      const p = page.properties;
+      const getText = (prop) => prop?.title?.[0]?.plain_text || prop?.rich_text?.[0]?.plain_text || '';
+      const getSelect = (prop) => prop?.select?.name || '';
+      return {
+        id: page.id,
+        name: getText(p['名前']||p['Name']),
+        cat: getSelect(p['カテゴリー']||p['Category'])||'기타',
+        place: getSelect(p['場所']||p['Place'])||'',
+        content: getText(p['定型文']||p['Content']),
+        notice: getText(p['注意事項']||p['Notice']),
+      };
+    }).filter(t=>t.name);
+
+    renderTemplateCatTabs();
+    renderTemplates();
+  } catch(e) {
+    document.getElementById('templateList').innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><div>정형문 불러오기 실패: ${e.message}</div></div>`;
+  }
+}
+
+function renderTemplateCatTabs() {
+  const cats = ['전체', ...new Set(templates.map(t=>t.cat))];
+  document.getElementById('templateCatTabs').innerHTML = cats.map(cat =>
+    `<button class="template-cat-btn ${activeTplCat===cat?'active':''}" onclick="filterTplCat('${cat}')">${cat}</button>`
+  ).join('');
+}
+
+function filterTplCat(cat) {
+  activeTplCat = cat;
+  renderTemplateCatTabs();
+  renderTemplates();
+}
+
+function renderTemplates() {
+  const q = (document.getElementById('templateSearch')?.value||'').toLowerCase();
+  const filtered = templates.filter(t => {
+    const catOk = activeTplCat==='전체' || t.cat===activeTplCat;
+    const searchOk = !q || [t.name, t.content, t.cat, t.place].join(' ').toLowerCase().includes(q);
+    return catOk && searchOk;
+  });
+
+  if (!filtered.length) {
+    document.getElementById('templateList').innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div>해당하는 정형문이 없어요</div></div>';
+    return;
+  }
+
+  document.getElementById('templateList').innerHTML = `<div class="template-grid">${filtered.map(t => `
+    <div class="template-card">
+      <div class="template-card-head">
+        <div class="template-card-info">
+          <div class="template-card-name">${esc(t.name)}</div>
+          <div class="template-card-meta">
+            <span class="template-badge">${esc(t.cat)}</span>
+            ${t.place ? `<span class="template-place-badge">${esc(t.place)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div class="template-card-body">
+        <div class="template-content" id="tpl-content-${t.id}">${esc(t.content)}</div>
+        ${t.notice ? `<div class="template-notice">⚠️ ${esc(t.notice)}</div>` : ''}
+        <div class="template-actions">
+          <button class="template-copy-btn" onclick="copyTemplate('${t.id}')">📋 복사</button>
+          <button class="template-expand-btn" onclick="expandTemplate('${t.id}', this)">펼치기</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function copyTemplate(id) {
+  const t = templates.find(x=>x.id===id);
+  if (!t) return;
+  navigator.clipboard.writeText(t.content).then(()=>{
+    const btn = event.target;
+    btn.textContent = '복사됨 ✓';
+    setTimeout(()=>btn.textContent='📋 복사', 2000);
+  });
+}
+function expandTemplate(id, btn) {
+  const el = document.getElementById(`tpl-content-${id}`);
+  el.classList.toggle('expanded');
+  btn.textContent = el.classList.contains('expanded') ? '접기' : '펼치기';
+}
+
+
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 
 async function callClaude(prompt) {
@@ -796,32 +946,70 @@ async function aiDraftReply(e, id) {
   const el = getAiResultEl(id);
   el.innerHTML = '✍️ 답변 초안 작성 중...';
 
-  // 같은 카테고리 완료 사례의 정형문 참고
-  const refs = cases.filter(x=>x.id!==id&&x.status==='완료'&&x.cat===c.cat&&x.reply).slice(0,3);
-  const refText = refs.map(r=>`참고 정형문: ${r.reply?.slice(0,150)}`).join('\n');
+  // 정형문 DB에서 관련 정형문 검색
+  let matchedTemplates = [];
+  if (templates.length) {
+    // 카테고리 키워드로 매칭
+    const keywords = [c.cat, c.subCat, c.title].filter(Boolean).join(' ').toLowerCase();
+    matchedTemplates = templates.filter(t => {
+      const tText = [t.name, t.cat, t.content].join(' ').toLowerCase();
+      return keywords.split(' ').some(kw => kw.length > 1 && tText.includes(kw));
+    }).slice(0, 3);
+  }
 
-  const prompt = `사루와 일본 구매대행 CS 담당자로서 아래 고객 문의에 대한 답변 정형문을 작성해줘.
-정중하고 친절하게, 사루와 특성에 맞게 작성해. 답변 정형문만 작성해, 다른 설명 하지 마.
+  // 과거 완료 사례 정형문도 참고
+  const refs = cases.filter(x=>x.id!==id&&x.status==='완료'&&x.cat===c.cat&&x.reply).slice(0,2);
+
+  const tplText = matchedTemplates.length
+    ? matchedTemplates.map(t=>`[정형문: ${t.name}]\n${t.content.slice(0,200)}`).join('\n\n')
+    : '';
+  const refText = refs.map(r=>`[과거 사례 답변]: ${r.reply?.slice(0,150)}`).join('\n');
+
+  const prompt = `사루와 일본 구매대행 CS 담당자로서 아래 고객 문의에 대한 답변을 작성해줘.
+정중하고 친절하게, 사루와 특성에 맞게 작성해. 답변만 작성해, 다른 설명 하지 마.
 
 고객 문의: ${c.inquiry||c.title}
 카테고리: ${c.cat} > ${c.subCat||''}
 귀책: ${c.blame||'미정'}
 처리 내용: ${c.notes||'없음'}
 
-${refText}`;
+${tplText ? `참고할 정형문:\n${tplText}` : ''}
+${refText ? `\n과거 유사 사례 답변:\n${refText}` : ''}`;
 
   try {
     const result = await callClaude(prompt);
+
+    // 매칭된 정형문 표시
+    const tplSection = matchedTemplates.length ? `
+      <div class="ai-result-section">
+        <div class="ai-result-label">참고한 정형문 (${matchedTemplates.length}개)</div>
+        ${matchedTemplates.map(t=>`
+          <div style="font-size:11px;padding:4px 8px;background:#F8F9FA;border-radius:4px;margin-bottom:4px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+            <span>${esc(t.name)} <span style="color:var(--text3)">[${esc(t.cat)}]</span></span>
+            <button class="ai-apply-btn" onclick="copyTemplateContent('${t.id}','${id}')">이 정형문 사용</button>
+          </div>`).join('')}
+      </div>` : '';
+
     el.innerHTML = `
-      <div class="ai-result-label" style="margin-bottom:8px">AI 답변 초안</div>
-      <div style="white-space:pre-line;font-size:13px;line-height:1.7">${esc(result)}</div>
-      <div style="margin-top:10px">
-        <button class="ai-apply-btn" style="font-size:12px;padding:5px 14px" onclick="applyAiReply('${id}',this)">정형문에 적용</button>
+      ${tplSection}
+      <div class="ai-result-section">
+        <div class="ai-result-label">AI 답변 초안</div>
+        <div style="white-space:pre-line;font-size:13px;line-height:1.7;margin-top:4px">${esc(result)}</div>
+        <div style="margin-top:8px">
+          <button class="ai-apply-btn" style="font-size:12px;padding:5px 14px" onclick="applyAiReply('${id}',this)">정형문에 적용</button>
+        </div>
       </div>`;
     el._aiReply = result;
   } catch(err) {
     el.innerHTML = '작성 실패: ' + err.message;
   }
+}
+
+function copyTemplateContent(tplId, caseId) {
+  const t = templates.find(x=>x.id===tplId);
+  if (!t) return;
+  const textarea = document.getElementById(`reply-${caseId}`);
+  if (textarea) textarea.value = t.content;
 }
 
 function applyAiCat(id, cat, subCat) {
@@ -982,6 +1170,7 @@ function switchView(view, statusOrBtn, btnEl) {
   document.getElementById('view-cases').style.display = 'none';
   document.getElementById('view-manual').style.display = 'none';
   document.getElementById('view-catmgr').style.display = 'none';
+  document.getElementById('view-templates').style.display = 'none';
 
   if (view==='status') {
     btnEl.classList.add('active');
@@ -1001,6 +1190,11 @@ function switchView(view, statusOrBtn, btnEl) {
     statusOrBtn.classList.add('active');
     document.getElementById('view-catmgr').style.display = '';
     renderCatMgr();
+  } else if (view==='templates') {
+    statusOrBtn.classList.add('active');
+    document.getElementById('view-templates').style.display = '';
+    if (!templates.length) loadTemplates();
+    else renderTemplates();
   }
 }
 
